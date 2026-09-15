@@ -363,12 +363,13 @@ func TestReportTaskMessagesIdempotencyIsTaskScoped(t *testing.T) {
 		}
 	})
 	eventTime := time.Now().UTC().Truncate(time.Microsecond)
-	message := map[string]any{"seq": 1, "type": "text", "content": "original", "idempotency_key": "qoder:evt_1", "created_at": eventTime, "output_truncated": true}
+	message := map[string]any{"seq": 1, "type": "text", "content": "original", "idempotency_key": "qoder:evt_1", "call_id": "call_original", "created_at": eventTime, "output_truncated": true}
 	for _, taskID := range []string{first, first, second} {
 		testutil.Call(t, testHandler.ReportTaskMessages, batchMessagesRequest(t, taskID, []any{message})).Want(http.StatusOK)
 	}
 	// Replaying the key with a changed payload must not overwrite the first report.
 	message["content"] = "changed"
+	message["call_id"] = "call_changed"
 	message["created_at"] = eventTime.Add(time.Second)
 	message["output_truncated"] = false
 	testutil.Call(t, testHandler.ReportTaskMessages, batchMessagesRequest(t, first, []any{message})).Want(http.StatusOK)
@@ -380,7 +381,7 @@ func TestReportTaskMessagesIdempotencyIsTaskScoped(t *testing.T) {
 		if len(rows) != 1 || rows[0].Content.String != "original" {
 			t.Fatalf("task %s replay changed persisted messages: %+v", taskID, rows)
 		}
-		if !rows[0].CreatedAt.Time.Equal(eventTime) || !rows[0].OutputTruncated.Valid || !rows[0].OutputTruncated.Bool {
+		if rows[0].CallID.String != "call_original" || !rows[0].CreatedAt.Time.Equal(eventTime) || !rows[0].OutputTruncated.Valid || !rows[0].OutputTruncated.Bool {
 			t.Fatalf("task %s replay changed event metadata: %+v", taskID, rows[0])
 		}
 	}

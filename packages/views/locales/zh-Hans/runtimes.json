@@ -28,9 +28,7 @@
     },
     "remote_runtimes": "远端运行时",
     "computers": "电脑",
-    "remote_count_one": "{{count}} 个远端运行时",
     "remote_count_other": "{{count}} 个远端运行时",
-    "computer_count_one": "{{count}} 台电脑",
     "computer_count_other": "{{count}} 台电脑"
   },
   "mika_setup": {
@@ -511,8 +509,9 @@
     "enter_pat": "输入 PAT",
     "update_credentials": "更新凭证",
     "credentials_configured": "已配置",
-    "agent_count_one": "{{count}} 个智能体",
-    "agent_count_other": "{{count}} 个智能体"
+    "agent_count_other": "{{count}} 个智能体",
+    "github_url": "GitHub URL",
+    "github_token": "GitHub 访问凭证"
   },
   "remote_runtime": {
     "action": "添加远端运行时",

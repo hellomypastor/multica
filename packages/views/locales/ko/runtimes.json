@@ -28,9 +28,7 @@
     },
     "remote_runtimes": "원격 런타임",
     "computers": "컴퓨터",
-    "remote_count_one": "원격 런타임 {{count}}개",
     "remote_count_other": "원격 런타임 {{count}}개",
-    "computer_count_one": "컴퓨터 {{count}}대",
     "computer_count_other": "컴퓨터 {{count}}대"
   },
   "mika_setup": {
@@ -511,8 +509,9 @@
     "enter_pat": "PAT 입력",
     "update_credentials": "인증 정보 업데이트",
     "credentials_configured": "설정됨",
-    "agent_count_one": "에이전트 {{count}}개",
-    "agent_count_other": "에이전트 {{count}}개"
+    "agent_count_other": "에이전트 {{count}}개",
+    "github_url": "GitHub URL",
+    "github_token": "GitHub 토큰"
   },
   "remote_runtime": {
     "action": "원격 런타임 추가",

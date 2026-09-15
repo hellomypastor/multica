@@ -28,9 +28,7 @@
     },
     "remote_runtimes": "リモートランタイム",
     "computers": "コンピューター",
-    "remote_count_one": "リモートランタイム {{count}} 件",
     "remote_count_other": "リモートランタイム {{count}} 件",
-    "computer_count_one": "コンピューター {{count}} 台",
     "computer_count_other": "コンピューター {{count}} 台"
   },
   "mika_setup": {
@@ -511,8 +509,9 @@
     "enter_pat": "PAT を入力",
     "update_credentials": "認証情報を更新",
     "credentials_configured": "設定済み",
-    "agent_count_one": "エージェント {{count}} 件",
-    "agent_count_other": "エージェント {{count}} 件"
+    "agent_count_other": "エージェント {{count}} 件",
+    "github_url": "GitHub URL",
+    "github_token": "GitHub トークン"
   },
   "remote_runtime": {
     "action": "リモートランタイムを追加",

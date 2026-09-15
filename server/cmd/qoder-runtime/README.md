@@ -214,9 +214,10 @@ bindings. Never move a journal with an active run.
 
 ### Updating an early development database
 
-The QCA migrations now use `479_qoder_connection` and
-`480_qoder_connection_workspace_index` after rebasing onto upstream main.
-If you ran the early draft with `451_qoder_connection` and
+The QCA migrations now use `509_qoder_connection` and
+`510_qoder_connection_workspace_index` after rebasing onto upstream main.
+If you ran an earlier draft with `479_qoder_connection` and
+`480_qoder_connection_workspace_index`, or with `451_qoder_connection` and
 `452_qoder_connection_workspace_index`, verify that the QCA table and its valid
 unique index already exist, then rename only those two exact entries in
 `schema_migrations` to the new names before running migrations. Preserve the
