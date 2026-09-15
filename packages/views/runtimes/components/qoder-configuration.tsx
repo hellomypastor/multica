@@ -338,7 +338,7 @@ function QoderForm({
         {repos.map((row, index) => (
           <div key={index} className="space-y-3 rounded-lg bg-muted/30 p-3">
             <label className="block space-y-1 text-caption">
-              GitHub URL
+              {t(($) => $.qoder.github_url)}
               <Input
                 type="url"
                 required
@@ -357,7 +357,7 @@ function QoderForm({
               />
             </label>
             <label className="block space-y-1 text-caption">
-              GitHub token
+              {t(($) => $.qoder.github_token)}
               <Input
                 type="password"
                 autoComplete="new-password"

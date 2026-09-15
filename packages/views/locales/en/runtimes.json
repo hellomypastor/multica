@@ -531,7 +531,9 @@
     "update_credentials": "Update credentials",
     "credentials_configured": "Configured",
     "agent_count_one": "{{count}} agent",
-    "agent_count_other": "{{count}} agents"
+    "agent_count_other": "{{count}} agents",
+    "github_url": "GitHub URL",
+    "github_token": "GitHub token"
   },
   "remote_runtime": {
     "action": "Add remote runtime",

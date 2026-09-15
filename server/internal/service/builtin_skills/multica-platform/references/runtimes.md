@@ -187,7 +187,8 @@ Each run uses a fresh session, with its ID pinned to the Multica run. The servic
 needs persistent state for restart recovery. Cancel from Multica to stop remote
 work; stopping the bridge process alone leaves remote execution running. Do not
 use `runtime update` to upgrade the bridge: deploy its binary through its service
-manager. Setup and recovery details live in `server/cmd/qoder-runtime/README.md`.
+manager. For setup and recovery, consult the Qoder Cloud Agent section of the
+Multica runtime documentation or ask the deployment administrator.
 
 The bridge registers `runtime_mode=cloud`. Other daemons may omit
 `runtimes[].runtime_mode` to retain local registration; custom CLI profiles
