@@ -526,7 +526,7 @@
   },
   "qoder": {
     "title": "QCA runtime",
-    "description": "Connect Qoder Cloud Agent. Multica manages execution and stores credentials encrypted. Workspace administrators can change this configuration.",
+    "description": "Connect Qoder Cloud Agents. Multica manages execution and stores credentials encrypted. Workspace administrators can change this configuration.",
     "loading": "Loading…",
     "unavailable": "Server setup is required: configure MULTICA_VCS_SECRET_KEY.",
     "online": "Online",
@@ -564,7 +564,7 @@
     "save_agent": "Save association",
     "agent_saved": "QCA Agent association saved",
     "agent_save_failed": "Could not save QCA Agent association",
-    "cloud_title": "Qoder Cloud Agent",
+    "cloud_title": "Qoder Cloud Agents",
     "managed": "Managed service",
     "cloud_description": "Run agents in Qoder Cloud using a shared connection, without maintaining a local host.",
     "configure_credentials": "Configure credentials",
@@ -607,13 +607,13 @@
       "execution_summary": "Up to {{concurrency}} at once · {{timeout}} min timeout"
     },
     "stop_confirm": {
-      "title": "Pause Qoder Cloud Agent?",
+      "title": "Pause Qoder Cloud Agents?",
       "description": "New tasks will not be sent to Qoder until it is resumed.",
       "cancel": "Cancel",
       "description_agents_one": "This agent keeps its instructions and history but cannot take new tasks until Qoder is resumed or it moves to another runtime.",
       "description_agents_other": "These {{count}} agents keep their instructions and history but cannot take new tasks until Qoder is resumed or they move to another runtime."
     },
-    "connect_title": "Connect Qoder Cloud Agent",
+    "connect_title": "Connect Qoder Cloud Agents",
     "connect_description": "Connect once with a Qoder PAT. Multica runs tasks in Qoder's sandboxes and stores credentials encrypted.",
     "page": {
       "configuration": "Configuration",
@@ -628,7 +628,7 @@
       "disconnect_hint": "Delete the saved PAT and repository tokens and remove this runtime. Agents using it are unbound and keep their history.",
       "disconnect": "Disconnect",
       "not_connected_title": "Qoder isn't connected",
-      "not_connected_hint": "Ask a workspace admin to connect Qoder Cloud Agent.",
+      "not_connected_hint": "Ask a workspace admin to connect Qoder Cloud Agents.",
       "workload_idle": "Idle",
       "connection_title": "Connection",
       "edit": "Edit",
@@ -652,7 +652,7 @@
       "minutes_other": "{{count}} minutes"
     },
     "disconnect_confirm": {
-      "title": "Disconnect Qoder Cloud Agent?",
+      "title": "Disconnect Qoder Cloud Agents?",
       "description": "The saved PAT and repository tokens are deleted and the Qoder runtime is removed. To use Qoder again, connect it from scratch.",
       "description_agents_one": "This agent will be unbound. It keeps its instructions and history and can move to another runtime.",
       "description_agents_other": "These {{count}} agents will be unbound. They keep their instructions and history and can move to another runtime.",

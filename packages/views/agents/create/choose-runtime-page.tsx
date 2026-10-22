@@ -186,7 +186,7 @@ export function ChooseRuntimePage({
 
   const summary =
     selection?.kind === "qoder"
-      ? "Qoder Cloud Agent"
+      ? "Qoder Cloud Agents"
       : selected
         ? `${selected.option.label} · ${selected.where}`
         : null;
