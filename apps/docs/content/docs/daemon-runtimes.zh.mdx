@@ -267,7 +267,7 @@ Qoder Cloud Agents 通过远端会话执行分配的任务。Multica 服务端�
 ### 准备工作
 
 - 需要工作区管理员权限。每个工作区只有一个 Qoder 连接。
-- 在 Qoder 中创建个人访问令牌（PAT）、至少一个运行环境，以及要使用的 Qoder Cloud Agents 智能体。模型、工具和 skill 都在 Qoder 的 Qoder Cloud Agents 智能体上配置，不在 Multica 中配置。
+- 创建 Qoder 个人访问令牌（PAT）、至少一个运行环境，以及要在 Qoder Cloud Agents 中使用的智能体。模型、工具和 skill 都在 Qoder Cloud Agents 中的远端智能体上配置，不在 Multica 中配置。
 - 自托管部署需在服务端设置 `MULTICA_VCS_SECRET_KEY`：一个 base64 编码的 32 字节密钥，重启前后必须保持不变。未设置时，**添加**菜单中不会出现 Qoder Cloud Agents。
 
 ### 连接 Qoder
@@ -281,7 +281,7 @@ Qoder Cloud Agents 通过远端会话执行分配的任务。Multica 服务端�
 
 ### 添加智能体
 
-在运行时页面打开 Qoder Cloud Agents，点击**用它创建智能体**；也可以照常创建智能体并选择 Qoder 运行时。在智能体表单的 **Qoder Cloud Agents 智能体**中选择远端智能体。已有智能体可在**路由**标签页中修改关联的 Qoder Cloud Agents 智能体或默认仓库。多个 Multica 智能体可以共用同一个连接，各自关联不同的 Qoder Cloud Agents 智能体。
+在运行时页面打开 Qoder Cloud Agents，点击**用它创建智能体**；也可以照常创建智能体并选择 Qoder 运行时。在智能体表单的 **远端智能体**中选择远端智能体。已有智能体可在**Qoder Cloud Agents** 标签页中修改关联的 Qoder Cloud Agents 智能体或默认仓库。多个 Multica 智能体可以共用同一个连接，各自关联不同的 Qoder Cloud Agents 智能体。
 
 连接凭证加密保存，在工作区内共享。管理员管理连接，成员可以选择可访问的 Qoder Cloud Agents 智能体。项目选择仓库和起始分支；创建编码会话时，对应仓库的令牌会传给 Qoder Cloud Agents。保存后的 PAT 不会返回浏览器。
 

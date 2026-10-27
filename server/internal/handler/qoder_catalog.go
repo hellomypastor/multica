@@ -158,7 +158,7 @@ func (h *Handler) ListQoderEnvironments(w http.ResponseWriter, r *http.Request) 
 	dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, 16<<10))
 	dec.DisallowUnknownFields()
 	if dec.Decode(&input) != nil {
-		writeError(w, 400, "invalid Qoder Cloud Agents token request")
+		writeError(w, 400, "invalid Qoder PAT request")
 		return
 	}
 	var extra any
@@ -185,7 +185,7 @@ func (h *Handler) ListQoderEnvironments(w http.ResponseWriter, r *http.Request) 
 		token = cfg.QoderToken
 	}
 	if token == "" || strings.ContainsAny(token, "\r\n\t ") {
-		writeError(w, 400, "Qoder Cloud Agents token is required")
+		writeError(w, 400, "Qoder PAT is required")
 		return
 	}
 	items, err := fetchQoderCatalog(r.Context(), base, token, "environments")

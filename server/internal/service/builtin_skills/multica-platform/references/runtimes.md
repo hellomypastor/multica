@@ -220,7 +220,7 @@ credential plaintext is returned. Blank secrets retain saved values; an empty
 `active_runs` and `queued_runs`.
 
 
-Managed runtimes store the Qoder Cloud Agents PAT and selected environment. Entering a PAT loads
+Managed runtimes store a Qoder personal access token (PAT) and the selected environment. Entering a PAT loads
 available environments automatically; a single environment is selected by default.
 `POST .../qoder/environments` lists environments using an entered or saved PAT
 (admin-only). `GET .../qoder/agents` lists names and IDs using the saved PAT for

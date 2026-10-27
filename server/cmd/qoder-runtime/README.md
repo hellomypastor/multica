@@ -39,7 +39,7 @@ store. Do not commit tokens to source control.
 | `MULTICA_TOKEN` | Multica workspace administrator PAT (standalone mode only) |
 | `MULTICA_WORKSPACE_ID` | Workspace UUID |
 | `QODER_CLOUD_BASE_URL` | Qoder managed API base, including its gateway prefix (for example `https://api.qoder.com/api/v1/cloud`) |
-| `QODER_CLOUD_TOKEN` | Qoder PAT with access to the configured agent/environment |
+| `QODER_CLOUD_TOKEN` | Qoder personal access token (PAT) with access to the configured agent/environment |
 | `QODER_CLOUD_ENVIRONMENT_ID` | Existing managed Qoder Environment ID |
 | `QODER_BRIDGE_STATE_DIR` | Dedicated persistent directory, writable by the service user |
 | `QODER_BRIDGE_NAME` | Optional display name; defaults to `Qoder Cloud Agents` |

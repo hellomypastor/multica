@@ -183,7 +183,7 @@ func (h *Handler) qoderInput(w http.ResponseWriter, r *http.Request, ws string) 
 		cfg.QoderToken = strings.TrimSpace(req.QoderToken)
 	}
 	if cfg.QoderToken == "" || strings.ContainsAny(cfg.QoderToken, "\r\n\t ") {
-		writeError(w, 400, "Qoder Cloud Agents token is required")
+		writeError(w, 400, "Qoder PAT is required")
 		return cfg, false
 	}
 	if req.GitHubTokens != nil {

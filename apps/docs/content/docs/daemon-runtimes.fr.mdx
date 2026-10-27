@@ -261,12 +261,12 @@ Modifier un profil n'affecte que les exécutions prises en charge par la suite. 
 
 ## Runtime distant Qoder Cloud Agents
 
-Qoder Cloud Agents exécute les tickets assignés dans des sessions Qoder Cloud Agents distantes. Le serveur Multica supervise un pont qui utilise le protocole de tâches existant du daemon ; aucun daemon local n'est nécessaire pour ce runtime.
+Qoder Cloud Agents exécute les tickets assignés dans des sessions distantes. Le serveur Multica supervise un pont qui utilise le protocole de tâches existant du daemon ; aucun daemon local n'est nécessaire pour ce runtime.
 
 ### Avant de commencer
 
 - Vous devez être administrateur de l'espace de travail. Chaque espace de travail a une seule connexion Qoder.
-- Dans Qoder, créez un jeton d'accès personnel (PAT), au moins un environnement et les agents Qoder Cloud Agents à utiliser. Les modèles, outils et skills se configurent sur l'agent Qoder Cloud Agents dans Qoder, pas dans Multica.
+- Créez un jeton d'accès personnel Qoder (PAT), au moins un environnement et les agents à utiliser dans Qoder Cloud Agents. Les modèles, outils et skills se configurent sur l'agent distant dans Qoder Cloud Agents, pas dans Multica.
 - Les installations auto-hébergées doivent définir `MULTICA_VCS_SECRET_KEY` sur le serveur : une clé de 32 octets encodée en base64, identique d'un redémarrage à l'autre. Sans elle, Qoder Cloud Agents n'apparaît pas dans le menu **Ajouter**.
 
 ### Connecter Qoder
@@ -280,7 +280,7 @@ Qoder Cloud Agents exécute les tickets assignés dans des sessions Qoder Cloud 
 
 ### Ajouter un agent
 
-Ouvrez Qoder Cloud Agents depuis la page Runtimes et cliquez sur **Créer un agent avec**, ou créez un agent comme d'habitude en choisissant le runtime Qoder. Dans le formulaire de l'agent, sélectionnez l'agent distant sous **Agent Qoder Cloud Agents**. Pour un agent existant, modifiez l'agent Qoder Cloud Agents ou son dépôt par défaut dans l'onglet **Routage**. Plusieurs agents Multica peuvent partager une connexion, chacun lié à un agent Qoder Cloud Agents différent.
+Ouvrez Qoder Cloud Agents depuis la page Runtimes et cliquez sur **Créer un agent avec**, ou créez un agent comme d'habitude en choisissant le runtime Qoder. Dans le formulaire de l'agent, sélectionnez l'agent distant sous **Agent distant**. Pour un agent existant, modifiez l'agent Qoder Cloud Agents ou son dépôt par défaut dans l'onglet **Qoder Cloud Agents**. Plusieurs agents Multica peuvent partager une connexion, chacun lié à un agent Qoder Cloud Agents différent.
 
 Les identifiants de connexion sont chiffrés et partagés dans l'espace de travail. Les administrateurs gèrent la connexion ; les membres peuvent sélectionner les agents Qoder Cloud Agents accessibles. Les projets choisissent le dépôt et la branche de départ ; le jeton du dépôt est transmis à Qoder Cloud Agents à la création d'une session de code. Les PAT ne sont jamais renvoyés au navigateur après l'enregistrement.
 
