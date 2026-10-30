@@ -16,8 +16,9 @@ func (b *Bridge) prepare(ctx context.Context, t *claimedTask) (*run, error) {
 		return nil, fmt.Errorf("claim identity does not match bridge")
 	}
 	chat := t.ChatSessionID != ""
-	if t.IsLeaderTask || chat == (t.IssueID != "") {
-		return nil, fmt.Errorf("Qoder bridge currently supports issue and chat runs only")
+	quick := !chat && t.IssueID == "" && t.QuickCreatePrompt != ""
+	if t.IsLeaderTask || (chat || quick) == (t.IssueID != "") {
+		return nil, fmt.Errorf("Qoder bridge currently supports issue, chat and quick-create runs only")
 	}
 	if !strings.HasPrefix(t.AuthToken, "mat_") {
 		return nil, fmt.Errorf("claim is missing a task-scoped credential")
@@ -37,11 +38,15 @@ func (b *Bridge) prepare(ctx context.Context, t *claimedTask) (*run, error) {
 	}
 	r.AgentID = binding.AgentID
 	var p strings.Builder
-	if chat {
-		if err := chatPrompt(&p, r, t); err != nil {
-			return nil, err
-		}
-	} else if err := b.issuePrompt(ctx, &p, r, t); err != nil {
+	switch {
+	case chat:
+		err = chatPrompt(&p, r, t)
+	case quick:
+		err = quickCreatePrompt(&p, r, t)
+	default:
+		err = b.issuePrompt(ctx, &p, r, t)
+	}
+	if err != nil {
 		return nil, err
 	}
 	if t.Agent != nil {
@@ -56,6 +61,11 @@ func (b *Bridge) prepare(ctx context.Context, t *claimedTask) (*run, error) {
 	}
 	if t.TriggerCommentContent != "" {
 		fmt.Fprintf(&p, "\nTriggering comment by %s:\n%s\n", t.TriggerAuthorName, t.TriggerCommentContent)
+	}
+	if quick {
+		// Drafting an issue needs no repository checkout.
+		r.Prompt = p.String()
+		return r, nil
 	}
 	for _, res := range t.ProjectResources {
 		if res.ResourceType == "local_directory" {

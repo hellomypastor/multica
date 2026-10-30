@@ -179,7 +179,7 @@ checkout.
 
 A server-hosted `qoder-runtime` service can register the `qoder_cloud` provider.
 Bind a Multica agent to the runtime and set its `runtime_config.qoder_agent_id` to the ID of the selected agent in Qoder Cloud Agents. The Web/Desktop agent creation form and runtime configuration tab provide a name-based agent picker.
-The bridge executes issue runs and chat replies through Qoder's managed session API; it does not
+The bridge executes issue runs, chat replies and quick-create through Qoder's managed session API; it does not
 run a local coding-agent CLI. Model, tools, skills and credentials are configured
 on Qoder. Local-directory resources and Multica execution overrides are rejected.
 

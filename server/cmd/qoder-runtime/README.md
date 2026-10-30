@@ -136,7 +136,8 @@ GitHub integration links the pull request back to the issue.
 
 ## Current boundaries
 
-This bridge runs issues and chat messages. Squad coordination, local directories,
+This bridge runs issues, chat messages and quick-create (the agent drafts the
+issue as JSON; the bridge creates it with the task credential). Squad coordination, local directories,
 attachments, arbitrary Git hosts, tag/commit checkout, full comment-history
 hydration, interactive tool approval, custom client-side tools, terminal access,
 file transfer and billing/usage conversion are not implemented. Set up a Qoder
