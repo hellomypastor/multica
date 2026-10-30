@@ -10,6 +10,7 @@ import (
 
 	"github.com/multica-ai/multica/server/internal/auth"
 	"github.com/multica-ai/multica/server/internal/testutil"
+	agentpkg "github.com/multica-ai/multica/server/pkg/agent"
 )
 
 func TestQoderConnectionSecrets(t *testing.T) {
@@ -284,18 +285,16 @@ func TestQoderStepLeaseReleasesDatabaseConnection(t *testing.T) {
 	testutil.Call(t, testHandler.StopQoderConnection, vcsHandlerRequest("POST", "/qoder/stop", nil, "")).Want(200)
 }
 
-func TestQoderQuickCreateUnsupported(t *testing.T) {
+func TestQoderQuickCreateSupported(t *testing.T) {
 	if testHandler == nil {
 		t.Skip("database not available")
 	}
-	for _, metadata := range []string{`{}`, `{"cli_version":"99.0.0"}`} {
-		runtimeID := dbfx.Runtime(t, "Qoder issue-only runtime", testutil.Cols{"provider": "qoder_cloud", "runtime_mode": "cloud", "metadata": metadata})
-		status, payload := testHandler.checkQuickCreateDaemonVersion(context.Background(), "issue", parseUUID(runtimeID))
-		if status != http.StatusUnprocessableEntity || payload["code"] != "agent_unavailable" {
-			t.Fatalf("Qoder quick-create should be unavailable, got %d: %v", status, payload)
-		}
-		if !strings.Contains(payload["reason"].(string), "create the issue manually") {
-			t.Fatalf("missing actionable issue-only explanation: %v", payload)
+	for _, metadata := range []string{`{}`, `{"cli_version":"0.0.1"}`} {
+		runtimeID := dbfx.Runtime(t, "Qoder runtime", testutil.Cols{"provider": "qoder_cloud", "runtime_mode": "cloud", "metadata": metadata})
+		for _, minimum := range []string{agentpkg.MinQuickCreateCLIVersion, agentpkg.MinQuickCreateFieldsCLIVersion} {
+			if status, payload := testHandler.checkQuickCreateDaemonVersionAtLeast(context.Background(), "issue", parseUUID(runtimeID), minimum); status != 0 {
+				t.Fatalf("Qoder quick-create should not be version-gated, got %d: %v", status, payload)
+			}
 		}
 	}
 }

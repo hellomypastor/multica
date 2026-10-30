@@ -41,6 +41,9 @@ type run struct {
 	Output             string           `json:"output,omitempty"`
 	Failure            string           `json:"failure,omitempty"`
 	Outcome            string           `json:"outcome,omitempty"`
+	QuickCreate        *quickCreate     `json:"quick_create,omitempty"`
+	// token is the task-scoped credential; it is never persisted.
+	token string
 }
 
 func save(path string, j *journal) error {

@@ -83,6 +83,9 @@ type harness struct {
 	messages                []map[string]any
 	prompt                  string
 	sessionAgent            string
+	reply                   string
+	created                 map[string]any
+	createStatus            int
 }
 
 func setup(t *testing.T) *harness {
@@ -95,7 +98,7 @@ func setup(t *testing.T) *harness {
 			t.Error("missing workspace")
 		}
 		auth := "Bearer multica-secret"
-		if strings.HasPrefix(r.URL.Path, "/api/issues/") {
+		if strings.HasPrefix(r.URL.Path, "/api/issues") {
 			auth = "Bearer mat_task"
 		}
 		if r.Header.Get("Authorization") != auth {
@@ -108,6 +111,13 @@ func setup(t *testing.T) *harness {
 		case strings.HasSuffix(r.URL.Path, "/tasks/claim"):
 			json.NewEncoder(w).Encode(map[string]any{"task": h.task})
 			h.task = nil
+		case r.URL.Path == "/api/issues" && r.Method == "POST":
+			json.NewDecoder(r.Body).Decode(&h.created)
+			if h.createStatus != 0 {
+				http.Error(w, "{}", h.createStatus)
+				return
+			}
+			io.WriteString(w, `{"identifier":"MUL-9"}`)
 		case strings.HasPrefix(r.URL.Path, "/api/issues/"):
 			io.WriteString(w, `{"title":"Fix bug","description":"Use repository context"}`)
 		case strings.HasSuffix(r.URL.Path, "/status"):
@@ -202,7 +212,11 @@ func setup(t *testing.T) *harness {
 	return h
 }
 func (h *harness) finish(reason string) {
-	h.events = append(h.events, map[string]any{"id": "evt_reply", "type": "agent.message", "content": []map[string]string{{"type": "text", "text": "Tests passed. PR: https://example.com/pr/1"}}}, map[string]any{"id": "evt_idle", "type": "session.status_idle", "stop_reason": map[string]string{"type": reason}})
+	reply := h.reply
+	if reply == "" {
+		reply = "Tests passed. PR: https://example.com/pr/1"
+	}
+	h.events = append(h.events, map[string]any{"id": "evt_reply", "type": "agent.message", "content": []map[string]string{{"type": "text", "text": reply}}}, map[string]any{"id": "evt_idle", "type": "session.status_idle", "stop_reason": map[string]string{"type": reason}})
 }
 func TestIssueRun(t *testing.T) {
 	h := setup(t)
@@ -276,6 +290,114 @@ func TestUnsupportedChatRunsFailBeforeSession(t *testing.T) {
 				t.Fatalf("unsupported chat run reached Qoder: %#v", h.failure)
 			}
 		})
+	}
+}
+func quickCreateTask(h *harness) {
+	h.task.IssueID = ""
+	h.task.QuickCreatePrompt = "Fix login redirect, P1"
+	h.task.ProjectID = "project-1"
+	h.task.QuickCreateAttachmentIDs = []string{"att-1"}
+	h.task.Agent.ID = "agent-uuid"
+}
+func TestQuickCreateRun(t *testing.T) {
+	h := setup(t)
+	ctx := context.Background()
+	quickCreateTask(h)
+	if err := h.b.step(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if h.failure != nil || !strings.Contains(h.prompt, "Fix login redirect, P1") || !strings.Contains(h.prompt, "exactly one JSON object") || strings.Contains(h.prompt, "mat_task") {
+		t.Fatalf("incorrect quick-create prompt: %s (failure %#v)", h.prompt, h.failure)
+	}
+	h.reply = "```json\n{\"title\":\"Fix login redirect\",\"description\":\"Login redirects loop.\",\"priority\":\"High\"}\n```"
+	h.finish("end_turn")
+	if err := h.b.step(ctx); err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]any{"title": "Fix login redirect", "description": "Login redirects loop.", "priority": "high", "assignee_type": "agent", "assignee_id": "agent-uuid", "origin_type": "quick_create", "origin_id": "task-1", "project_id": "project-1", "attachment_ids": []any{"att-1"}}
+	if fmt.Sprint(h.created) != fmt.Sprint(want) {
+		t.Fatalf("created issue %#v", h.created)
+	}
+	if h.complete["output"] != "Created MUL-9: Fix login redirect" || h.b.state.first() != nil {
+		t.Fatalf("result: %#v", h.complete)
+	}
+	data, err := os.ReadFile(h.b.path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(data), "mat_task") {
+		t.Fatal("task credential persisted")
+	}
+}
+func TestQuickCreateRunAppliesModalSelections(t *testing.T) {
+	h := setup(t)
+	ctx := context.Background()
+	quickCreateTask(h)
+	h.task.SquadID = "squad-1"
+	h.task.QuickCreatePriority = "low"
+	h.task.QuickCreateDueDate = "2030-01-02"
+	h.task.ParentIssueID = "parent-1"
+	if err := h.b.step(ctx); err != nil {
+		t.Fatal(err)
+	}
+	h.reply = `{"title":"Fix login redirect","description":"d","priority":"urgent"}`
+	h.finish("end_turn")
+	if err := h.b.step(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if h.created["assignee_type"] != "squad" || h.created["assignee_id"] != "squad-1" || h.created["priority"] != "low" || h.created["due_date"] != "2030-01-02" || h.created["parent_issue_id"] != "parent-1" {
+		t.Fatalf("created issue %#v", h.created)
+	}
+}
+func TestQuickCreateRunReportsUnusableDraft(t *testing.T) {
+	for name, tc := range map[string]struct {
+		reply  string
+		status int
+		want   string
+	}{
+		"not json":  {reply: "I created the issue.", want: "did not return an issue draft"},
+		"no title":  {reply: `{"description":"d"}`, want: "without a title"},
+		"duplicate": {reply: `{"title":"t"}`, status: http.StatusConflict, want: "already exists"},
+		"rejected":  {reply: `{"title":"t"}`, status: http.StatusBadRequest, want: "rejected the issue"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			h := setup(t)
+			ctx := context.Background()
+			quickCreateTask(h)
+			h.createStatus = tc.status
+			if err := h.b.step(ctx); err != nil {
+				t.Fatal(err)
+			}
+			h.reply = tc.reply
+			h.finish("end_turn")
+			if err := h.b.step(ctx); err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(fmt.Sprint(h.complete["output"]), tc.want) {
+				t.Fatalf("result: %#v", h.complete)
+			}
+		})
+	}
+}
+func TestQuickCreateRunAfterRestartDoesNotCreateIssue(t *testing.T) {
+	h := setup(t)
+	ctx := context.Background()
+	quickCreateTask(h)
+	if err := h.b.step(ctx); err != nil {
+		t.Fatal(err)
+	}
+	restored, err := readJournal(h.b.path, h.b.state.Binding)
+	if err != nil {
+		t.Fatal(err)
+	}
+	h.b.state = restored
+	h.reply = `{"title":"t"}`
+	h.finish("end_turn")
+	if err := h.b.step(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if h.created != nil || !strings.Contains(fmt.Sprint(h.complete["output"]), "restarted") {
+		t.Fatalf("created %#v, result %#v", h.created, h.complete)
 	}
 }
 func TestAmbiguousSubmitReconcilesAfterRestart(t *testing.T) {

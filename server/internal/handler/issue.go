@@ -2989,10 +2989,9 @@ func (h *Handler) checkQuickCreateDaemonVersionAtLeast(ctx context.Context, sour
 		}
 	}
 	if rt.Provider == qoderruntime.Provider {
-		return http.StatusUnprocessableEntity, map[string]any{
-			"code":   "agent_unavailable",
-			"reason": "Qoder Cloud Agents supports existing issue runs only; create the issue manually and assign it to this agent",
-		}
+		// The bridge ships with the server and creates quick-create issues
+		// itself, so there is no CLI version to gate on.
+		return 0, nil
 	}
 	current := readRuntimeCLIVersion(rt.Metadata)
 	switch err := agentpkg.CheckMinCLIVersionFor(current, minimum); {
