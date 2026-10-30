@@ -285,16 +285,30 @@ func TestQoderStepLeaseReleasesDatabaseConnection(t *testing.T) {
 	testutil.Call(t, testHandler.StopQoderConnection, vcsHandlerRequest("POST", "/qoder/stop", nil, "")).Want(200)
 }
 
-func TestQoderQuickCreateRejectsSquadLeader(t *testing.T) {
+func TestQoderQuickCreateLimits(t *testing.T) {
 	if testHandler == nil {
 		t.Skip("database not available")
 	}
-	qoderID := dbfx.Runtime(t, "Qoder squad leader runtime", testutil.Cols{"provider": "qoder_cloud", "runtime_mode": "cloud", "metadata": `{}`})
-	if status, payload := testHandler.checkQuickCreateSquadLeaderRuntime(context.Background(), "issue", parseUUID(qoderID)); status != http.StatusUnprocessableEntity || payload["code"] != "agent_unavailable" {
-		t.Fatalf("Qoder squad leader should be rejected, got %d: %v", status, payload)
+	ctx := context.Background()
+	qoderID := parseUUID(dbfx.Runtime(t, "Qoder quick-create limits runtime", testutil.Cols{"provider": "qoder_cloud", "runtime_mode": "cloud", "metadata": `{}`}))
+	for _, tc := range []struct {
+		name               string
+		squad, attachments bool
+		want               string
+	}{
+		{"squad", true, false, "lead a squad"},
+		{"attachments", false, true, "attachments"},
+	} {
+		status, payload := testHandler.checkQuickCreateQoderLimits(ctx, "issue", qoderID, tc.squad, tc.attachments)
+		if status != http.StatusUnprocessableEntity || payload["code"] != "agent_unavailable" || !strings.Contains(payload["reason"].(string), tc.want) {
+			t.Fatalf("%s: Qoder quick-create should be rejected, got %d: %v", tc.name, status, payload)
+		}
 	}
-	if status, payload := testHandler.checkQuickCreateSquadLeaderRuntime(context.Background(), "issue", parseUUID(testRuntimeID)); status != 0 {
-		t.Fatalf("daemon squad leader should be accepted, got %d: %v", status, payload)
+	if status, payload := testHandler.checkQuickCreateQoderLimits(ctx, "issue", qoderID, false, false); status != 0 {
+		t.Fatalf("plain Qoder quick-create should be accepted, got %d: %v", status, payload)
+	}
+	if status, payload := testHandler.checkQuickCreateQoderLimits(ctx, "issue", parseUUID(testRuntimeID), true, true); status != 0 {
+		t.Fatalf("daemon runtime should be accepted, got %d: %v", status, payload)
 	}
 }
 

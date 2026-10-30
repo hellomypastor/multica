@@ -319,6 +319,17 @@ func TestQuickCreateCredentialIsNotPersisted(t *testing.T) {
 		t.Fatalf("unexpected report: %#v", h.failure)
 	}
 }
+func TestQuickCreateAttachmentsFailBeforeExecution(t *testing.T) {
+	h := setup(t)
+	quickCreateTask(h)
+	h.task.QuickCreateAttachmentIDs = []string{"attachment-1"}
+	if err := h.b.step(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if h.creates != 0 || h.issuePosts != 0 || !strings.Contains(fmt.Sprint(h.failure["error"]), "attachments") {
+		t.Fatalf("quick-create attachment ignored: creates=%d posts=%d failure=%#v", h.creates, h.issuePosts, h.failure)
+	}
+}
 // lostCreate leaves a quick-create run whose first create request failed
 // after it was marked submitted, as when the response is lost.
 func lostCreate(t *testing.T, h *harness) {

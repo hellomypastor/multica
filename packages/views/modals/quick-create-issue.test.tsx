@@ -513,6 +513,23 @@ describe("AgentCreatePanel", () => {
     expect(screen.queryByText("Cloud Squad")).not.toBeInTheDocument();
   });
 
+  it("blocks Qoder agents when the prompt references an attachment", () => {
+    mockRuntimesData.list = [{ id: "runtime-1", provider: "qoder_cloud", metadata: {} }];
+    mockQuickCreateStore.lastActorType = "agent";
+    mockQuickCreateStore.lastActorId = "agent-1";
+    const attachmentId = "019ec09d-6222-722b-bdfa-427b105d80be";
+    mockIssueDraftStore.draft.agent.prompt = `See ![shot](/api/attachments/${attachmentId}/download)`;
+    mockIssueDraftStore.draft.shared.attachments = [{
+      clientUploadId: attachmentId,
+      status: "uploaded",
+      filename: "shot.png",
+      attachment: { id: attachmentId, url: "https://cdn.example/shot.png", filename: "shot.png" },
+    } as never];
+    renderPanel({ onClose: vi.fn(), isExpanded: false, setIsExpanded: vi.fn() });
+    expect(screen.getByRole("button", { name: /^Create$/i })).toBeDisabled();
+    expect(screen.getByText(/can't read attachments/i)).toBeInTheDocument();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockQuickCreateStore.lastActorType = null;

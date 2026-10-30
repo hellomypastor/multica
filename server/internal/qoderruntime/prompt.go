@@ -38,6 +38,11 @@ func (b *Bridge) prepare(ctx context.Context, t *claimedTask) (*run, error) {
 	}
 	r.AgentID = binding.AgentID
 	if quickCreate {
+		// The created issue would carry the attachments, and the run on it
+		// would then fail below; refuse before creating anything.
+		if len(t.QuickCreateAttachmentIDs) > 0 {
+			return nil, fmt.Errorf("attachments are not supported by the Qoder bridge; create the issue without them")
+		}
 		return prepareQuickCreate(t, r), nil
 	}
 	var p strings.Builder
