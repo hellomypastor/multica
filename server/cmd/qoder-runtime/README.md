@@ -136,7 +136,7 @@ GitHub integration links the pull request back to the issue.
 
 ## Current boundaries
 
-This is an issue-execution PoC. Chat, squad coordination, local directories,
+This bridge runs issues and chat messages. Squad coordination, local directories,
 attachments, arbitrary Git hosts, tag/commit checkout, full comment-history
 hydration, interactive tool approval, custom client-side tools, terminal access,
 file transfer and billing/usage conversion are not implemented. Set up a Qoder
@@ -217,7 +217,7 @@ first. Stopping keeps Qoder Cloud Agents/repository credentials for a later Save
 standalone bridge for the same connection alongside the managed service. When
 migrating, stop the standalone bridge at idle before saving the managed config.
 
-This does not add chat support, session continuation, or delivery validation:
+This does not add session continuation or delivery validation:
 The end of a turn in Qoder Cloud Agents remains execution completion, not proof that a PR was created.
 
 
