@@ -235,6 +235,49 @@ func TestIssueRun(t *testing.T) {
 		t.Fatal("credential persisted")
 	}
 }
+func TestChatRun(t *testing.T) {
+	h := setup(t)
+	ctx := context.Background()
+	h.task.IssueID = ""
+	h.task.ChatSessionID = "chat-1"
+	h.task.ChatMessage = "Introduce yourself"
+	if err := h.b.step(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if h.failure != nil || !strings.Contains(h.prompt, "Multica chat message") || !strings.Contains(h.prompt, "Introduce yourself") || strings.Contains(h.prompt, "pull request") {
+		t.Fatalf("incorrect chat prompt: %s (failure %#v)", h.prompt, h.failure)
+	}
+	h.finish("end_turn")
+	if err := h.b.step(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if h.complete["session_id"] != "sess_1" || !strings.Contains(fmt.Sprint(h.complete["output"]), "Tests passed") {
+		t.Fatalf("result: %#v", h.complete)
+	}
+}
+func TestUnsupportedChatRunsFailBeforeSession(t *testing.T) {
+	for name, mutate := range map[string]func(*daemon.Task){
+		"attachments": func(task *daemon.Task) {
+			task.ChatMessageAttachments = []daemon.ChatAttachmentMeta{{ID: "att-1"}}
+		},
+		"empty message": func(task *daemon.Task) { task.ChatMessage = " " },
+		"leader":        func(task *daemon.Task) { task.IsLeaderTask = true },
+	} {
+		t.Run(name, func(t *testing.T) {
+			h := setup(t)
+			h.task.IssueID = ""
+			h.task.ChatSessionID = "chat-1"
+			h.task.ChatMessage = "Hi"
+			mutate(h.task)
+			if err := h.b.step(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			if h.creates != 0 || h.failure == nil {
+				t.Fatalf("unsupported chat run reached Qoder: %#v", h.failure)
+			}
+		})
+	}
+}
 func TestAmbiguousSubmitReconcilesAfterRestart(t *testing.T) {
 	h := setup(t)
 	h.lostSend = true
