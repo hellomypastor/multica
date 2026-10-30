@@ -42,6 +42,7 @@ func (b *Bridge) prepare(ctx context.Context, t *claimedTask) (*run, error) {
 			return nil, fmt.Errorf("chat attachments are not supported by the Qoder bridge")
 		}
 		p.WriteString("You are chatting with a user of a Multica workspace. Reply directly to their message; your final message is shown to them as your reply. This bridge does not expose a local Multica daemon.\n")
+		p.WriteString(chatAudience(t.ChatChannelType, t.ChatType))
 		if t.PriorSessionID != "" {
 			r.PriorSessionID = t.PriorSessionID
 			p.WriteString("This continues an earlier conversation. If it is not in your context, answer from the message below.\n")
@@ -104,6 +105,20 @@ func (b *Bridge) prepare(ctx context.Context, t *claimedTask) (*run, error) {
 	}
 	r.Prompt = p.String()
 	return r, nil
+}
+
+// chatAudience mirrors the local daemon's chat audience line: a group reply is
+// not private to its sender, and an IM chat of unknown type never defaults to
+// private. Kept local so the bridge stays independent of the daemon packages.
+func chatAudience(channelType, chatType string) string {
+	switch {
+	case chatType == "group":
+		return "Audience: group room; not private; unseen members may read replies.\n"
+	case chatType == "p2p" || channelType == "":
+		return "Audience: direct room.\n"
+	default:
+		return "Audience: unknown.\n"
+	}
 }
 
 func (b *Bridge) issuePrompt(ctx context.Context, t *claimedTask, r *run, p *strings.Builder) error {

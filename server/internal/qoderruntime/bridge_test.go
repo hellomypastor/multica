@@ -244,7 +244,7 @@ func TestChatRun(t *testing.T) {
 	if err := h.b.step(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if h.failure != nil || !strings.Contains(h.prompt, "Introduce yourself") || strings.Contains(h.prompt, "pull request") {
+	if h.failure != nil || !strings.Contains(h.prompt, "Introduce yourself") || !strings.Contains(h.prompt, "Audience: direct room.") || strings.Contains(h.prompt, "pull request") {
 		t.Fatalf("incorrect chat prompt: %s (failure %#v)", h.prompt, h.failure)
 	}
 	h.finish("end_turn")
@@ -253,6 +253,18 @@ func TestChatRun(t *testing.T) {
 	}
 	if h.complete["session_id"] != "sess_1" || !strings.Contains(fmt.Sprint(h.complete["output"]), "Tests passed") {
 		t.Fatalf("result: %#v", h.complete)
+	}
+}
+func TestChatAudience(t *testing.T) {
+	for _, tc := range []struct{ channel, chatType, want string }{
+		{"", "", "Audience: direct room."},
+		{"slack", "p2p", "Audience: direct room."},
+		{"slack", "group", "Audience: group room; not private"},
+		{"feishu", "", "Audience: unknown."},
+	} {
+		if got := chatAudience(tc.channel, tc.chatType); !strings.Contains(got, tc.want) {
+			t.Errorf("chatAudience(%q, %q) = %q, want %q", tc.channel, tc.chatType, got, tc.want)
+		}
 	}
 }
 func TestChatAttachmentsFailBeforeExecution(t *testing.T) {
