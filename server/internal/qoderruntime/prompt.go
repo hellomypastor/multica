@@ -15,8 +15,9 @@ func (b *Bridge) prepare(ctx context.Context, t *claimedTask) (*run, error) {
 	if t.RuntimeID != b.state.RuntimeID || t.WorkspaceID != b.cfg.WorkspaceID {
 		return nil, fmt.Errorf("claim identity does not match bridge")
 	}
-	if t.IssueID == "" || t.ChatSessionID != "" || t.IsLeaderTask {
-		return nil, fmt.Errorf("Qoder bridge currently supports issue runs only")
+	quickCreate := t.QuickCreatePrompt != "" && t.IssueID == ""
+	if (t.IssueID == "" && !quickCreate) || t.ChatSessionID != "" || t.IsLeaderTask {
+		return nil, fmt.Errorf("Qoder bridge currently supports issue and quick-create runs only")
 	}
 	if !strings.HasPrefix(t.AuthToken, "mat_") {
 		return nil, fmt.Errorf("claim is missing a task-scoped credential")
@@ -35,6 +36,9 @@ func (b *Bridge) prepare(ctx context.Context, t *claimedTask) (*run, error) {
 		return nil, err
 	}
 	r.AgentID = binding.AgentID
+	if quickCreate {
+		return prepareQuickCreate(t, r), nil
+	}
 	taskAPI := *b.multica
 	taskAPI.token = t.AuthToken
 	var issue struct {

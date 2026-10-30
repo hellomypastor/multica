@@ -167,10 +167,9 @@ export function AgentCreatePanel({
         (a) =>
           !a.archived_at &&
           isAgentRuntimeBound(a) &&
-          !runtimes.some((r) => r.id === a.runtime_id && r.provider === "qoder_cloud") &&
           canAssignAgent(a, userId, memberRole),
       ),
-    [agents, runtimes, userId, memberRole],
+    [agents, userId, memberRole],
   );
   const visibleAgentIds = useMemo(
     () => new Set(visibleAgents.map((a) => a.id)),
@@ -351,7 +350,11 @@ export function AgentCreatePanel({
   // can't pre-check, defer to the server's authoritative gate
   // (checkQuickCreateDaemonVersion, which reads the row by id regardless of
   // role) instead of failing closed in the UI.
-  const canPrecheckVersion = selectedAgent?.runtime_id != null && selectedRuntime != null;
+  // Qoder Cloud Agents runs through the managed bridge, which has no CLI.
+  const canPrecheckVersion =
+    selectedAgent?.runtime_id != null &&
+    selectedRuntime != null &&
+    selectedRuntime.provider !== "qoder_cloud";
   const runtimeCliVersion = readRuntimeCliVersion(selectedRuntime?.metadata);
   const baseVersionCheck = useMemo(
     () => checkQuickCreateCliVersion(runtimeCliVersion),
