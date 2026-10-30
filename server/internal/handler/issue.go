@@ -2864,6 +2864,12 @@ func (h *Handler) QuickCreateIssue(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, status, payload)
 		return
 	}
+	if hasSquad {
+		if status, payload := h.checkQuickCreateSquadLeaderRuntime(r.Context(), obsmetrics.RuntimeLookupSourceIssue, agent.RuntimeID); status != 0 {
+			writeJSON(w, status, payload)
+			return
+		}
+	}
 	if priority != "" || dueDate != "" {
 		if status, payload := h.checkQuickCreateDaemonVersionAtLeast(
 			r.Context(), obsmetrics.RuntimeLookupSourceIssue, agent.RuntimeID, agentpkg.MinQuickCreateFieldsCLIVersion,
@@ -2976,6 +2982,22 @@ func (h *Handler) isRuntimeOnline(ctx context.Context, runtimeID pgtype.UUID) bo
 //	}
 func (h *Handler) checkQuickCreateDaemonVersion(ctx context.Context, source string, runtimeID pgtype.UUID) (int, map[string]any) {
 	return h.checkQuickCreateDaemonVersionAtLeast(ctx, source, runtimeID, agentpkg.MinQuickCreateCLIVersion)
+}
+
+// checkQuickCreateSquadLeaderRuntime rejects a squad quick-create whose leader
+// runs on Qoder Cloud Agents. The bridge can draft and create the issue, but
+// the squad-leader task that the squad assignment dispatches next is not
+// supported there, so the issue would be created with a leader run that fails
+// immediately.
+func (h *Handler) checkQuickCreateSquadLeaderRuntime(ctx context.Context, source string, runtimeID pgtype.UUID) (int, map[string]any) {
+	rt, err := h.getAgentRuntime(ctx, source, runtimeID)
+	if err != nil || rt.Provider != qoderruntime.Provider {
+		return 0, nil
+	}
+	return http.StatusUnprocessableEntity, map[string]any{
+		"code":   "agent_unavailable",
+		"reason": "Qoder Cloud Agents cannot lead a squad; pick the agent directly to create the issue",
+	}
 }
 
 func (h *Handler) checkQuickCreateDaemonVersionAtLeast(ctx context.Context, source string, runtimeID pgtype.UUID, minimum string) (int, map[string]any) {

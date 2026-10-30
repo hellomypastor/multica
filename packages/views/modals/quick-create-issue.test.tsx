@@ -509,6 +509,8 @@ describe("AgentCreatePanel", () => {
     expect(screen.getByRole("button", { name: /^Create$/i })).toBeEnabled();
     expect(screen.queryByText(/daemon.*version/i)).not.toBeInTheDocument();
     expect(screen.getAllByText("Bohan").length).toBeGreaterThan(0);
+    // The Qoder bridge cannot run squad-leader tasks, so its squads stay hidden.
+    expect(screen.queryByText("Cloud Squad")).not.toBeInTheDocument();
   });
 
   beforeEach(() => {

@@ -82,6 +82,10 @@ func (b *Bridge) createQuickIssue(ctx context.Context, r *run) error {
 		return b.persist()
 	}
 	if qc.token == "" {
+		if qc.Submitted {
+			// The create request may have reached Multica before the restart.
+			return fail("the Qoder bridge restarted while creating the issue; check whether it was created before retrying quick-create")
+		}
 		return fail("the Qoder bridge restarted before the issue was created; retry quick-create")
 	}
 	draft, err := parseIssueDraft(r.Output)
@@ -129,8 +133,11 @@ func (b *Bridge) createQuickIssue(ctx context.Context, r *run) error {
 	switch {
 	case err == nil:
 		r.Output = "Created issue " + created.Identifier + ": " + draft.Title
-	case retry && errors.As(err, &rejected) && rejected.Status == http.StatusConflict:
-		// The earlier request created the issue but its response was lost.
+	case retry && errors.As(err, &rejected) && rejected.Status == http.StatusConflict && rejected.Code == "active_duplicate_issue":
+		// The earlier request most likely created the issue but its response
+		// was lost. Only the duplicate-title conflict qualifies; the server's
+		// completion handler still locates the issue by origin_id, so a
+		// same-titled issue from someone else is reported as not found.
 		r.Output = "Created issue: " + draft.Title
 	case definitelyRejected(err):
 		return fail("Multica rejected the issue: " + err.Error())

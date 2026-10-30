@@ -85,6 +85,8 @@ type harness struct {
 	sessionAgent            string
 	issue                   map[string]any
 	issueStatus             int
+	issueBody               string
+	issuePosts              int
 }
 
 func setup(t *testing.T) *harness {
@@ -111,11 +113,16 @@ func setup(t *testing.T) *harness {
 			json.NewEncoder(w).Encode(map[string]any{"task": h.task})
 			h.task = nil
 		case r.URL.Path == "/api/issues" && r.Method == http.MethodPost:
+			h.issuePosts++
 			json.NewDecoder(r.Body).Decode(&h.issue)
 			if h.issueStatus != 0 {
 				w.WriteHeader(h.issueStatus)
 			}
-			io.WriteString(w, `{"identifier":"MUL-7"}`)
+			if h.issueBody != "" {
+				io.WriteString(w, h.issueBody)
+			} else {
+				io.WriteString(w, `{"identifier":"MUL-7"}`)
+			}
 		case strings.HasPrefix(r.URL.Path, "/api/issues/"):
 			io.WriteString(w, `{"title":"Fix bug","description":"Use repository context"}`)
 		case strings.HasSuffix(r.URL.Path, "/status"):
@@ -310,6 +317,62 @@ func TestQuickCreateCredentialIsNotPersisted(t *testing.T) {
 	}
 	if h.issue != nil || !strings.Contains(fmt.Sprint(h.failure["error"]), "restarted") {
 		t.Fatalf("unexpected report: %#v", h.failure)
+	}
+}
+// lostCreate leaves a quick-create run whose first create request failed
+// after it was marked submitted, as when the response is lost.
+func lostCreate(t *testing.T, h *harness) {
+	t.Helper()
+	quickCreateTask(h)
+	ctx := context.Background()
+	if err := h.b.step(ctx); err != nil {
+		t.Fatal(err)
+	}
+	h.issueStatus = http.StatusBadGateway
+	h.draft(`{"title":"Speed up inbox"}`)
+	h.b.step(ctx)
+	if h.issuePosts != 1 || h.complete != nil || h.failure != nil {
+		t.Fatalf("first create should be retried: posts=%d complete=%#v failure=%#v", h.issuePosts, h.complete, h.failure)
+	}
+}
+func TestQuickCreateRetryAcceptsOwnDuplicate(t *testing.T) {
+	h := setup(t)
+	lostCreate(t, h)
+	h.issueStatus = http.StatusConflict
+	h.issueBody = `{"code":"active_duplicate_issue","error":"duplicate"}`
+	if err := h.b.step(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if h.failure != nil || !strings.Contains(fmt.Sprint(h.complete["output"]), "Speed up inbox") {
+		t.Fatalf("retry should complete: complete=%#v failure=%#v", h.complete, h.failure)
+	}
+}
+func TestQuickCreateRetryRejectsOtherConflict(t *testing.T) {
+	h := setup(t)
+	lostCreate(t, h)
+	h.issueStatus = http.StatusConflict
+	h.issueBody = `{"error":"the target status was archived"}`
+	if err := h.b.step(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if h.complete != nil || !strings.Contains(fmt.Sprint(h.failure["error"]), "rejected") {
+		t.Fatalf("non-duplicate conflict should fail: complete=%#v failure=%#v", h.complete, h.failure)
+	}
+}
+func TestQuickCreateRestartAfterSubmitAsksToCheck(t *testing.T) {
+	h := setup(t)
+	lostCreate(t, h)
+	j, err := readJournal(h.b.path, "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	h.b.state = j
+	h.issueStatus = 0
+	if err := h.b.step(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if h.issuePosts != 1 || !strings.Contains(fmt.Sprint(h.failure["error"]), "check whether it was created") {
+		t.Fatalf("unexpected report: posts=%d failure=%#v", h.issuePosts, h.failure)
 	}
 }
 func TestAmbiguousSubmitReconcilesAfterRestart(t *testing.T) {

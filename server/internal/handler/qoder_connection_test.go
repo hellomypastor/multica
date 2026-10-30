@@ -285,6 +285,19 @@ func TestQoderStepLeaseReleasesDatabaseConnection(t *testing.T) {
 	testutil.Call(t, testHandler.StopQoderConnection, vcsHandlerRequest("POST", "/qoder/stop", nil, "")).Want(200)
 }
 
+func TestQoderQuickCreateRejectsSquadLeader(t *testing.T) {
+	if testHandler == nil {
+		t.Skip("database not available")
+	}
+	qoderID := dbfx.Runtime(t, "Qoder squad leader runtime", testutil.Cols{"provider": "qoder_cloud", "runtime_mode": "cloud", "metadata": `{}`})
+	if status, payload := testHandler.checkQuickCreateSquadLeaderRuntime(context.Background(), "issue", parseUUID(qoderID)); status != http.StatusUnprocessableEntity || payload["code"] != "agent_unavailable" {
+		t.Fatalf("Qoder squad leader should be rejected, got %d: %v", status, payload)
+	}
+	if status, payload := testHandler.checkQuickCreateSquadLeaderRuntime(context.Background(), "issue", parseUUID(testRuntimeID)); status != 0 {
+		t.Fatalf("daemon squad leader should be accepted, got %d: %v", status, payload)
+	}
+}
+
 func TestQoderQuickCreateSkipsCLIVersionGate(t *testing.T) {
 	if testHandler == nil {
 		t.Skip("database not available")
